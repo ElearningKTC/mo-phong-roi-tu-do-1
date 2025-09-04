@@ -78,16 +78,8 @@ class MyScene extends Phaser.Scene {
             }
         });
 
-        let clickCount = 0;
-        onoff.on('pointerdown', () => {
-            clickCount++;
+        // tạo biến vận tốc của viên bi
 
-            if (clickCount%2 == 1) {
-                console.log('lẻ');
-            } else {
-                console.log('chẵn')
-        }
-        });
     }
 
 
