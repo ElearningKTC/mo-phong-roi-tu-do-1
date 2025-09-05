@@ -91,6 +91,7 @@ class MyScene extends Phaser.Scene {
                 });
             } else {
                 console.log('chẵn');
+                this.vienbi.setGravityY(600);
                 this.input.on('gameobjectdown', (pointer, gameObject) => {
                     if (gameObject === this.vienbi) {
                     this.vienbi.setPosition(this.namcham.x, this.namcham.y + this.namcham.displayHeight / 2 + this.vienbi.displayHeight / 2);
