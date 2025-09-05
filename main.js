@@ -67,23 +67,42 @@ class MyScene extends Phaser.Scene {
 
         this.physics.add.existing(this.vienbi);
         this.vienbi.body.setCollideWorldBounds(true);
-        
-
         this.vienbi.setInteractive();
+        
         this.input.on('gameobjectdown', (pointer, gameObject) => {
-            if (gameObject === this.vienbi) {
-                // Đặt lại vị trí ngay dưới nam châm
+                if (gameObject === this.vienbi) {
+            // Đặt lại vị trí ngay dưới nam châm
                 this.vienbi.setPosition(this.namcham.x, this.namcham.y + this.namcham.displayHeight / 2 + this.vienbi.displayHeight / 2);
-                this.vienbi.setGravityY(300);
-            }
+                this.vienbi.setGravityY(600);
+                }       
+            });
+        
+        let clickCount = 0;
+
+        onoff.on('pointerdown', () => {
+            clickCount++;
+            if (clickCount%2 === 1) {
+                console.log('lẻ');
+                this.input.on('gameobjectdown', (pointer, gameObject) => {
+                    if (gameObject === this.vienbi) {
+                    this.vienbi.setPosition(this.namcham.x, this.namcham.y + this.namcham.displayHeight / 2 + this.vienbi.displayHeight / 2);
+                    this.vienbi.setGravityY(0);
+                    }
+                });
+            } else {
+                console.log('chẵn');
+                this.input.on('gameobjectdown', (pointer, gameObject) => {
+                    if (gameObject === this.vienbi) {
+                    this.vienbi.setPosition(this.namcham.x, this.namcham.y + this.namcham.displayHeight / 2 + this.vienbi.displayHeight / 2);
+                    this.vienbi.setGravityY(600);
+                    }       
+                });
+        }
         });
-
-        // tạo biến vận tốc của viên bi
+    }
 
     }
 
-
-    }
 
 const config = {
     type: Phaser.AUTO,
