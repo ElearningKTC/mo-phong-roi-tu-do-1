@@ -27,11 +27,11 @@ class MyScene extends Phaser.Scene {
 
         this.namcham = this.add.image(312, 63, 'namcham');
 
-        const onoff = this.add.image(600, 450,'onoff').setInteractive();
-        this.add.image(600, 510,'reset');
+        this.onoff = this.add.image(600, 450,'onoff').setInteractive();
+        this.reset = this.add.image(600, 510,'reset').setInteractive();
         
         this.add.image(500, 480,'time').setOrigin(0.5);
-        this.add.image(100, 480,'start');
+        this.start = this.add.image(100, 480,'start').setInteractive();
 
         // Các mốc chia độ
         let labels = [0, 25, 50, 75, 100];
@@ -50,14 +50,12 @@ class MyScene extends Phaser.Scene {
         this.cqd.setInteractive({ draggable: true });
 
         this.valueText = this.add.text(50, 50, "0.00", { fontSize: '20px', color: '#000' });
-        this.timeText = this.add.text(500, 480, "0.00", { fontSize: '20px', color: '#008000ff' });
+        this.timeText = this.add.text(500, 480, "0", { fontSize: '20px', color: '#008000ff' });
         this.timeText.setOrigin(0.5);
         this.timeText.setVisible(false);
-
         this.input.setDraggable(this.cqd);
-
-        let accel = [980.3, 979, 973.3, 989.4, 990.1, 967.4];
-
+        
+        let value = 0;
         // Hàm cập nhật giá trị (dùng chung cho lúc khởi tạo và khi drag)
         const updateValue = () => {
             let halfCqd = this.cqd.displayHeight * this.cqd.originY;
@@ -69,14 +67,9 @@ class MyScene extends Phaser.Scene {
             this.cqd.x = this.thuoc.x;
 
             let ratio = (this.cqd.y - minY) / (maxY - minY);
-            let value = (ratio * 100).toFixed(2);
+            value = (ratio * 100).toFixed(2);
 
             this.valueText.setText(value.toString());
-
-            let randomaccel = Phaser.Utils.Array.GetRandom(accel);
-
-            let time = ((2 * value / randomaccel) ** 0.5).toFixed(2);
-            this.timeText.setText(time.toString());
         };
 
         // Cập nhật ngay từ khi khởi tạo
@@ -98,41 +91,79 @@ class MyScene extends Phaser.Scene {
 
         // Thêm physics cho viên bi
         this.physics.add.existing(this.vienbi);
-        
         this.vienbi.setInteractive();
 
-        let isActive = false; // cờ bật/tắt
+        let randomaccel = 0;
+        const accel = [980.3, 979, 973.3, 989.4, 990.1, 967.4];
+        let isActive = false;   // trạng thái bật/tắt
+        let isFalling = false;  // trạng thái viên bi đang rơi
 
-        // Sự kiện click vào viên bi
+        // Sự kiện click vào viên bi → đưa viên bi về nam châm
         this.input.on('gameobjectdown', (pointer, gameObject) => {
             if (gameObject === this.vienbi) {
-                // Đặt lại vị trí ngay dưới nam châm
                 this.vienbi.setPosition(
                     this.namcham.x,
                     this.namcham.y + this.namcham.displayHeight / 2 + this.vienbi.displayHeight / 2
                 );
-
-                // Nếu đang bật chế độ (isActive) thì giữ nguyên, ngược lại thì rơi
                 this.vienbi.setGravityY(isActive ? 0 : 600);
             }
         });
 
         // Xử lý bật/tắt khi nhấn nút onoff
         let clickCount = 0;
-        onoff.setInteractive().on('pointerdown', () => {
+        this.onoff.setInteractive().on('pointerdown', () => {
             clickCount++;
-            isActive = (clickCount % 2 === 1); // true nếu lẻ, false nếu chẵn
+            isActive = (clickCount % 2 === 1);
 
             if (isActive) {
-                console.log('lẻ');
-                this.timeText.setVisible(true);
+                console.log('Bật chế độ');
                 this.vienbi.setGravityY(0);
             } else {
-                console.log('chẵn');
+                console.log('Tắt chế độ');
                 this.timeText.setVisible(false);
+                this.vienbi.setGravityY(600);
+                isFalling = false;
+            }
+        });
+
+        // Gắn sự kiện start chỉ một lần
+        this.start.setInteractive().on('pointerdown', () => {
+            if (isActive) {
+                // Reset trước khi rơi
+                this.timeText.setVisible(false);
+                isFalling = true;
+                randomaccel = Phaser.Utils.Array.GetRandom(accel);
+                console.log("Random accel:", randomaccel);
+
+                // Đặt lại viên bi ngay dưới nam châm
+                this.vienbi.setPosition(
+                    this.namcham.x,
+                    this.namcham.y + this.namcham.displayHeight / 2 + this.vienbi.displayHeight / 2
+                );
+
+                // Cho viên bi rơi
                 this.vienbi.setGravityY(600);
             }
         });
+
+        this.reset.setInteractive().on('pointerdown', () => {
+            if (isActive) {   // chỉ reset khi trạng thái on
+                this.timeText.setText("0");
+                this.timeText.setVisible(true);
+            }
+        });
+
+        // Theo dõi worldstep, chỉ check khi isActive + isFalling
+        this.physics.world.on('worldstep', () => {
+            if (isActive && isFalling && this.vienbi.y >= this.cqd.y) {
+                let time = Math.sqrt((2 * value) / randomaccel).toFixed(3);
+                this.timeText.setText(time.toString());
+                this.timeText.setVisible(true);
+                isFalling = false; // Chặn lặp lại
+            }
+        });
+
+        
     }
 
     update() {
@@ -140,7 +171,7 @@ class MyScene extends Phaser.Scene {
     if (this.vienbi.y >= marble_pos) {
         this.vienbi.body.setVelocity(0, 0);  // dừng vận tốc
         this.vienbi.body.setGravityY(0);     // tắt gravity
-        this.vienbi.setY(marble_pos);               // ép tọa độ y đúng 525
+        this.vienbi.setY(marble_pos);
     }
 }
 }
