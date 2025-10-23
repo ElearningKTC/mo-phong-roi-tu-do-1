@@ -1,3 +1,5 @@
+let bgm;
+let isMusicOn = true;
 class MyScene extends Phaser.Scene {
     constructor() {
         super({ key: 'MyScene' });
@@ -13,6 +15,7 @@ class MyScene extends Phaser.Scene {
         this.load.image('mang', 'assets/mang.png');
         this.load.image('namcham', 'assets/namcham.png');
         this.load.image('cqd', 'assets/cqd.png');
+        this.load.audio('bgm', 'assets/BG_audio.mp3');
         
     }
 
@@ -33,6 +36,37 @@ class MyScene extends Phaser.Scene {
         this.add.image(500, 480,'time').setOrigin(0.5);
         this.start = this.add.image(100, 480,'start').setInteractive();
 
+        //Thêm bg audio
+        bgm = this.sound.add('bgm', { loop: true });
+        bgm.play();
+
+        const musicBtn = this.add.text(590, 40, '🎵', {
+            fontSize: '30px', fill: '#fff'
+        }).setInteractive();
+
+        musicBtn.on('pointerdown', () => {
+            isMusicOn = !isMusicOn;
+            if (isMusicOn) {
+                bgm.play();
+                musicBtn.setText('🎵');
+            } else {
+                bgm.pause();
+                musicBtn.setText('🔇');
+            }
+        });
+        const tooltip6 = this.add.text(570, 10, 'Bật/ Tắt nhạc', {
+            fontSize: '14px',
+            fill: '#fff',
+            backgroundColor: '#333',
+            padding: { left: 5, right: 5, top: 2, bottom: 2 }
+        }).setVisible(false);
+        musicBtn.on('pointerover', () => {
+            tooltip6.setVisible(true);
+        });
+        musicBtn.on('pointerout', () => {
+            tooltip6.setVisible(false);
+        });
+    
         // Các mốc chia độ
         let labels = [0, 25, 50, 75, 100];
 
