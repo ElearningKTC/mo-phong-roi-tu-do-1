@@ -1,5 +1,15 @@
 let bgm;
 let isMusicOn = true;
+let helpPanelVisible = false;
+let helpPanelElements = [];
+
+const instructions = 
+  'Hướng dẫn:\n' +
+  '- Kéo cảm biến vào vị trí mong muốn\n' +
+  '- Nhấn Start để thả bi và đo thời gian\n' +
+  '- Quan sát T1, T2 và gia tốc g';
+
+
 class MyScene extends Phaser.Scene {
     constructor() {
         super({ key: 'MyScene' });
@@ -15,6 +25,7 @@ class MyScene extends Phaser.Scene {
         this.load.image('mang', 'assets/mang.png');
         this.load.image('namcham', 'assets/namcham.png');
         this.load.image('cqd', 'assets/cqd.png');
+        this.load.image('helpIcon', 'assets/helpicon.png');
         this.load.audio('bgm', 'assets/BG_audio.mp3');
         
     }
@@ -35,6 +46,23 @@ class MyScene extends Phaser.Scene {
         
         this.add.image(500, 480,'time').setOrigin(0.5);
         this.start = this.add.image(100, 480,'start').setInteractive();
+
+        // Nút Help
+        const helpBtn = this.add.image(700, 50, 'helpIcon').setScale(0.07).setInteractive();
+        const tooltip = this.add.text(660, 10, 'Hướng dẫn', {
+            fontSize: '14px',
+            fill: '#fff',
+            backgroundColor: '#333',
+            padding: { left: 5, right: 5, top: 2, bottom: 2 }
+        }).setVisible(false);
+        helpBtn.on('pointerover', () => {
+            tooltip.setVisible(true);
+        });
+
+        helpBtn.on('pointerout', () => {
+            tooltip.setVisible(false);
+        });
+        helpBtn.on('pointerdown', () => this.showHelp());
 
         //Thêm bg audio
         bgm = this.sound.add('bgm', { loop: true });
@@ -144,6 +172,7 @@ class MyScene extends Phaser.Scene {
         });
 
         // Xử lý bật/tắt khi nhấn nút onoff
+        this.statusCircle = this.add.circle(400, 450, 10, 0x000000);
         let clickCount = 0;
         this.onoff.setInteractive().on('pointerdown', () => {
             clickCount++;
@@ -152,11 +181,13 @@ class MyScene extends Phaser.Scene {
             if (isActive) {
                 console.log('Bật chế độ');
                 this.vienbi.setGravityY(0);
+                this.statusCircle.setFillStyle(0xFFFF00);
             } else {
                 console.log('Tắt chế độ');
                 this.timeText.setVisible(false);
                 this.vienbi.setGravityY(600);
                 isFalling = false;
+                this.statusCircle.setFillStyle(0x000000);
             }
         });
 
@@ -199,6 +230,33 @@ class MyScene extends Phaser.Scene {
 
         
     }
+
+    showHelp() {
+        if (helpPanelVisible) {
+            // Nếu đã hiển thị thì ẩn đi
+            helpPanelElements.forEach(el => el.destroy());
+            helpPanelElements = [];
+            helpPanelVisible = false;
+            return;
+        }
+
+            // Nếu chưa có panel thì hiển thị
+            const bg = this.add.rectangle(400, 230, 500, 150, 0x333333).setStrokeStyle(2, 0xffffff);
+            const txt = this.add.text(180, 200, instructions, {
+                fontSize: '20px', fill: '#fff'
+            });
+            const close = this.add.text(600, 170, '✖', { fontSize: '24px', fill: '#f66' })
+                .setInteractive()
+                .on('pointerdown', () => {
+                    helpPanelElements.forEach(el => el.destroy());
+                    helpPanelElements = [];
+                    helpPanelVisible = false;
+            });
+
+            helpPanelElements.push(bg, txt, close);
+            helpPanelVisible = true;
+        }
+    
 
     update() {
     let marble_pos = this.mang.y + this.mang.displayHeight / 2 - this.vienbi.displayWidth;
