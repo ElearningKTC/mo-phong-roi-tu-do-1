@@ -291,6 +291,12 @@ class MyScene extends Phaser.Scene {
         }
     });
 
+    this.namcham.setInteractive().on('pointerdown', () => {
+        // Khi click vào nam châm → reset bảng
+        records = [];
+        this.tableText.setText('t (s) | s (cm)');
+    });
+
     }
 
     
