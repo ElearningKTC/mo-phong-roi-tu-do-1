@@ -231,6 +231,7 @@ class MyScene extends Phaser.Scene {
         
     }
 
+    // Tùy chỉnh nút Help
     showHelp() {
         if (helpPanelVisible) {
             // Nếu đã hiển thị thì ẩn đi
@@ -255,17 +256,17 @@ class MyScene extends Phaser.Scene {
 
             helpPanelElements.push(bg, txt, close);
             helpPanelVisible = true;
-        }
+    }
     
 
     update() {
-    let marble_pos = this.mang.y + this.mang.displayHeight / 2 - this.vienbi.displayWidth;
-    if (this.vienbi.y >= marble_pos) {
-        this.vienbi.body.setVelocity(0, 0);  // dừng vận tốc
-        this.vienbi.body.setGravityY(0);     // tắt gravity
-        this.vienbi.setY(marble_pos);
+        let marble_pos = this.mang.y + this.mang.displayHeight / 2 - this.vienbi.displayWidth;
+        if (this.vienbi.y >= marble_pos) {
+            this.vienbi.body.setVelocity(0, 0);  // dừng vận tốc
+            this.vienbi.body.setGravityY(0);     // tắt gravity
+            this.vienbi.setY(marble_pos);
+        }
     }
-}
 }
 
 const config = {
@@ -278,6 +279,9 @@ const config = {
         arcade: {
             debug: false
         }
+    },
+    audio: {
+        disableWebAudio: true
     },
     scene: MyScene     // Scene chạy
 };
