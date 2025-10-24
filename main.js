@@ -2,6 +2,11 @@ let bgm;
 let isMusicOn = true;
 let helpPanelVisible = false;
 let helpPanelElements = [];
+let records = []; // mảng lưu dữ liệu
+let tableContainer; // nhóm chứa bảng
+let tableText;
+let toggleButton;
+let isTableVisible = false;
 
 const instructions = 
   'Hướng dẫn:\n' +
@@ -48,7 +53,7 @@ class MyScene extends Phaser.Scene {
         this.start = this.add.image(100, 480,'start').setInteractive();
 
         // Nút Help
-        const helpBtn = this.add.image(700, 50, 'helpIcon').setScale(0.07).setInteractive();
+        const helpBtn = this.add.image(670, 50, 'helpIcon').setScale(0.065).setInteractive();
         const tooltip = this.add.text(660, 10, 'Hướng dẫn', {
             fontSize: '14px',
             fill: '#fff',
@@ -63,6 +68,25 @@ class MyScene extends Phaser.Scene {
             tooltip.setVisible(false);
         });
         helpBtn.on('pointerdown', () => this.showHelp());
+
+        //Tạo giao diện bảng
+        this.tableBg = this.add.rectangle(600, 100, 220, 260, 0x000000, 0.6).setOrigin(0).setVisible(false);
+        this.tableText = this.add.text(640, 110, 't (s) | s(cm) ', {
+            fontSize: '16px',
+            fill: '#ffffff'
+        }).setVisible(false);
+        
+        //Nút bật tắt bảng
+        const toggleBtn = this.add.text(700, 35, '📋', {
+            fontSize: '28px',
+            padding: { x: 8, y: 4 }
+        }).setInteractive();
+
+        toggleBtn.on('pointerdown', () => {
+            isTableVisible = !isTableVisible;
+            this.tableBg.setVisible(isTableVisible);
+            this.tableText.setVisible(isTableVisible);
+        });
 
         //Thêm bg audio
         bgm = this.sound.add('bgm', { loop: true });
@@ -156,7 +180,7 @@ class MyScene extends Phaser.Scene {
         this.vienbi.setInteractive();
 
         let randomaccel = 0;
-        const accel = [980.3, 979, 973.3, 989.4, 990.1, 967.4];
+        const accel = [980.3, 979, 973.3, 989.4, 990.1, 967.4]; // gia tốc rơi tự do
         let isActive = false;   // trạng thái bật/tắt
         let isFalling = false;  // trạng thái viên bi đang rơi
 
@@ -179,11 +203,9 @@ class MyScene extends Phaser.Scene {
             isActive = (clickCount % 2 === 1);
 
             if (isActive) {
-                console.log('Bật chế độ');
                 this.vienbi.setGravityY(0);
                 this.statusCircle.setFillStyle(0xFFFF00);
             } else {
-                console.log('Tắt chế độ');
                 this.timeText.setVisible(false);
                 this.vienbi.setGravityY(600);
                 isFalling = false;
@@ -220,17 +242,50 @@ class MyScene extends Phaser.Scene {
 
         // Theo dõi worldstep, chỉ check khi isActive + isFalling
         this.physics.world.on('worldstep', () => {
+            let marble_pos = this.mang.y + this.mang.displayHeight / 2 - this.vienbi.displayWidth;
             if (isActive && isFalling && this.vienbi.y >= this.cqd.y) {
                 let time = Math.sqrt((2 * value) / randomaccel).toFixed(3);
                 this.timeText.setText(time.toString());
                 this.timeText.setVisible(true);
-                isFalling = false; // Chặn lặp lại
+            }
+            if (this.vienbi.y >= marble_pos && isFalling) {
+                this.vienbi.body.setVelocity(0, 0);
+                this.vienbi.body.setGravityY(0);
+                this.vienbi.setY(marble_pos);
+
+                // Ghi lại bản ghi (thời gian và quãng đường)
+                let time = Math.sqrt((2 * value) / randomaccel).toFixed(3);
+                records.push({ distance: value, time: time });
+
+                // Giới hạn 10 dòng
+                if (records.length > 10) records.shift();
+
+                // Cập nhật text của bảng
+                let tableTextContent = 't (s) | s (cm)\n';
+                for (let i = 0; i < records.length; i++) {
+                    tableTextContent += `${records[i].time} | ${records[i].distance}\n`;
+                }
+                this.tableText.setText(tableTextContent);
+
+                isFalling = false; // chặn rơi tiếp
+            }
+            if (this.vienbi.y >= marble_pos ) {
+                this.vienbi.body.setVelocity(0, 0);
+                this.vienbi.body.setGravityY(0);
+                this.vienbi.setY(marble_pos);
+                isFalling = false; // chặn rơi tiếp
             }
         });
+        // Reset giá trị của bảng
+        this.namcham.setInteractive().on('pointerdown', () => {
+        // Khi click vào nam châm → reset bảng
+        records = [];
+        this.tableText.setText('t (s) | s (cm)');
+        });
 
-        
     }
 
+    
     // Tùy chỉnh nút Help
     showHelp() {
         if (helpPanelVisible) {
@@ -259,14 +314,8 @@ class MyScene extends Phaser.Scene {
     }
     
 
-    update() {
-        let marble_pos = this.mang.y + this.mang.displayHeight / 2 - this.vienbi.displayWidth;
-        if (this.vienbi.y >= marble_pos) {
-            this.vienbi.body.setVelocity(0, 0);  // dừng vận tốc
-            this.vienbi.body.setGravityY(0);     // tắt gravity
-            this.vienbi.setY(marble_pos);
-        }
-    }
+    
+
 }
 
 const config = {
