@@ -255,7 +255,7 @@ class MyScene extends Phaser.Scene {
             if (isActive && isFalling) {
                 // đảm bảo value và randomaccel là số
                 const s = parseFloat(value) || 0; // quãng đường (cm)
-                const g = parseFloat(randomaccel) || 980; // gia tốc (cm/s^2 tương đương 9.8 m/s^2 => 980 cm/s^2 nếu bạn đang dùng cm)
+                const g = parseFloat(randomaccel) || 980; // gia tốc
                 const time = Math.sqrt((2 * s) / g); // tính thời gian bằng số thực
 
                 // Hiển thị thời gian
